@@ -37,7 +37,7 @@ A flexible and extensible backend template built with modern technologies. Curre
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/PotatoCodder/typescript-backend-template
    cd typescript-backend-template
    ```
 
