@@ -1,0 +1,314 @@
+# Backend Template Documentation
+
+This is a Node.js backend template built with Express.js, TypeScript, Prisma ORM, and Zod for validation. It's designed as a starting point for building RESTful APIs with a PostgreSQL database.
+
+The application provides a basic structure for user authentication and management, including:
+- User registration and login with JWT authentication
+- Password hashing with bcrypt
+- Input validation using Zod schemas
+- Database operations via Prisma ORM
+- TypeScript for type safety
+
+## Architecture
+
+### Tech Stack
+- **Runtime**: Node.js (v16 or higher)
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Validation**: Zod
+- **Authentication**: JSON Web Tokens (JWT), bcrypt for password hashing
+- **Development**: tsx for hot reloading
+
+### Project Structure
+```
+backend/
+├── prisma/
+│   ├── schema.prisma          # Database schema definition
+│   ├── migrations/            # Database migration files
+│   ├── config.ts              # Prisma configuration
+│   └── seed.ts                # Database seeding script
+├── src/
+│   ├── app.ts                 # Express application setup
+│   ├── index.ts               # Server entry point
+│   ├── auth/                  # Authentication module
+│   │   ├── auth.controller.ts # Auth controllers (signup, login)
+│   │   ├── auth.routes.ts     # Auth routes
+│   │   ├── auth.service.ts    # Auth services (JWT, password hashing)
+│   │   └── jwt.ts             # JWT utilities
+│   ├── routes/                # API route handlers
+│   │   └── users.routes.ts    # User-related routes (stub)
+│   ├── schemas/               # Zod validation schemas
+│   │   └── user.schema.ts     # User validation schemas
+│   ├── middlewares/           # Express middlewares
+│   │   └── validate.ts        # Request validation middleware
+│   ├── data/                  # Sample/mock data
+│   ├── lib/                   # Utility libraries
+│   │   └── prisma.ts          # Prisma client instance
+│   └── generated/             # Auto-generated Prisma client
+├── docs/                      # Documentation
+├── .env                       # Environment variables (create this file)
+├── package.json               # Dependencies and scripts
+├── tsconfig.json              # TypeScript configuration
+└── .gitignore                 # Git ignore rules
+```
+
+## Setup and Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- PostgreSQL database (local or cloud)
+
+### Installation Steps
+
+1. **Clone the repository** (when on GitHub):
+   ```bash
+   git clone <repository-url>
+   cd backend
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   - Create a `.env` file in the root directory
+   - Add the following variables:
+     ```
+     DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
+     JWT_SECRET="your-super-secret-jwt-key"
+     PORT=3000
+     ```
+   - Replace with your actual PostgreSQL credentials
+   - For production/cloud databases, use the appropriate connection string
+
+4. **Set up the database**:
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+
+   # Run database migrations
+   npx prisma migrate dev
+
+   # Seed the database with initial data (creates admin user)
+   npx prisma db seed
+   ```
+
+5. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   The server will start on `http://localhost:3000` (configurable via PORT in .env)
+
+6. **Build for production**:
+   ```bash
+   npm run build
+   npm start
+   ```
+
+## How It Works
+
+### Application Flow
+1. **Server Startup**: `server.ts` starts the Express app on the specified port
+2. **Request Handling**: `app.ts` sets up middleware and routes
+3. **Validation**: Requests are validated using Zod schemas in middleware
+4. **Database Operations**: Prisma client handles database interactions
+5. **Response**: JSON responses are sent back to clients
+
+### Key Components
+
+#### Express App (`app.ts`)
+- Configures Express with JSON parsing middleware
+- Defines basic health check routes (`/` and `/health`)
+- Mounts authentication routes at `/api/auth`
+
+#### Authentication Module
+- **Auth Routes** (`auth.routes.ts`): Defines signup and login endpoints
+- **Auth Controller** (`auth.controller.ts`): Handles signup and login logic
+- **Auth Service** (`auth.service.ts`): Password hashing with bcrypt, JWT token generation
+- **JWT Utils** (`jwt.ts`): JWT signing and verification utilities
+
+#### Database Schema (`prisma/schema.prisma`)
+- **User Model**: id, email, password, name, createdAt
+- Uses PostgreSQL as the database provider
+- Generates client to `src/generated/prisma/`
+
+#### Validation Schemas
+- **User Schema** (`user.schema.ts`): Validates user registration (email, password, name) and login (email, password)
+- Uses Zod for runtime type checking and validation
+
+#### Middleware (`validate.ts`)
+- Generic validation middleware that parses request body against Zod schema
+- Returns 400 error with validation details on failure
+- Calls `next()` on success
+
+### API Endpoints
+- `GET /` - Server status
+- `GET /health` - Health check
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- User management endpoints (to be implemented in `routes/users.routes.ts`)
+
+### Database Operations
+- Prisma handles all database interactions
+- Migrations ensure schema consistency
+- Client is auto-generated and type-safe
+
+## API Usage
+
+After seeding the database, you can test login with the admin user:
+- Email: admin@gmail.com
+- Password: password123
+
+### Authentication Endpoints
+
+#### Register a new user
+```bash
+POST /api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe"
+  },
+  "token": "jwt-token-here"
+}
+```
+
+#### Login
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe"
+  },
+  "token": "jwt-token-here"
+}
+```
+
+## Development Guidelines
+
+### Adding New Routes
+1. Create route handlers in `src/routes/`
+2. Import and use validation middleware with appropriate schemas
+3. Mount routes in `app.ts`
+
+### Adding Authentication to Routes
+1. Use JWT middleware (to be implemented) for protected routes
+2. Extract user info from JWT token
+
+### Database Changes
+1. Update `prisma/schema.prisma`
+2. Run `npx prisma migrate dev` to create and apply migrations
+3. Regenerate client with `npx prisma generate`
+
+### Validation
+- Define schemas in `src/schemas/` using Zod
+- Apply validation middleware to routes requiring input validation
+
+### Environment Variables
+- Add new variables to `.env`
+- Access via `process.env.VARIABLE_NAME`
+- Never commit sensitive data to version control
+
+## Deployment
+
+### Production Considerations
+- Set `NODE_ENV=production`
+- Use a process manager like PM2
+- Configure proper logging
+- Set up database connection pooling
+- Use environment-specific configuration
+
+### Docker (Optional)
+If deploying with Docker:
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+## Contributing
+
+This is a template project. To extend functionality:
+1. Implement JWT middleware for protecting routes
+2. Add CRUD operations for users (get, update, delete)
+3. Implement password reset functionality
+4. Add role-based access control (RBAC)
+5. Implement proper error handling and logging
+6. Add API documentation (Swagger/OpenAPI)
+7. Set up testing (Jest, Supertest)
+8. Add input sanitization and security headers
+9. Implement rate limiting
+10. Add email verification for registration
+11. Set up CI/CD pipelines for GitHub Actions
+
+## Troubleshooting
+
+### Common Issues
+- **Database connection fails**: Check `DATABASE_URL` in `.env`
+- **Prisma client not found**: Run `npx prisma generate`
+- **Port already in use**: Change PORT in `.env` or kill process on port
+- **Validation errors**: Check request body matches schema requirements
+
+### Useful Commands
+```bash
+# View database
+npx prisma studio
+
+# Reset database
+npx prisma migrate reset
+
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate dev
+
+# Seed the database
+npx prisma db seed
+
+# Build the project
+npm run build
+
+# Start development server
+npm run dev
+
+# Start production server
+npm start
+```
+
+This template provides a solid foundation for building scalable Node.js APIs. Customize and extend based on your project requirements.
